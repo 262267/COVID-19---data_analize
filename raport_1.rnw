@@ -1,0 +1,592 @@
+% !TeX TXS-program:compile = txs:///knit2pdf
+\documentclass[12pt]{mwart}
+\usepackage[utf8]{inputenc}
+\usepackage[T1,plmath]{polski}
+\usepackage{lmodern}
+\usepackage{float}
+\author{Jakub Muzyka i Łukasz Serafin}
+\title{Pakiety statystyczne raport nr 1}
+\date{\today}
+<<echo=FALSE>>=
+if (.Platform$OS.type=="windows") {
+  pdf.options(encoding = 'CP1250')
+}
+@
+\begin{document}
+\maketitle
+\section{Wstęp}
+
+	Do wykonania sprawozdania wykorzystaliśmy dane z popularnej strony internetowej: \\ https://www.kaggle.com/datasets/caesarmario/our-world-in-data-covid19-dataset/, które dotyczą wirusa COVID-19. Dane pochodzą z okresu od 01.01.2020 roku do 08.12.2022 roku. Zawierają one 239947 wierszy i 67 kolumn. Udowodnimy bądź zaprzeczymy tezie, że {\bfseries "Im więcej szczepień tym mniej zgonów oraz hospitalizacji"}. Celem naszej analizy jest przedstawienie różnych aspektów dotyczących szczepionek na COVID-19 oraz zobrazowanie danych w celu udowodnienia lub obalenia postawionego przez nas pytania badawczego. 
+	\subsection{Opis zmiennych wykorzystanych w sprawozdaniu}
+	W naszej pracy znajdują się zarówno zmienne kategoryczne oraz ciągłe. Poniżej przedstawiamy nazwy kolumn, których użyliśmy do wykonania raportu: \\
+		\begin{enumerate}
+			\item \textbf{Continent} (zmienna kategoryczna) — jak sama nazwa mówi, kolumna ta posiada nazwy kontynentów, na których rozwijał się wirus (na przykład: Europa, Azja, \ldots).
+			\item \textbf{Location} (zmienna kategoryczna) --- przechowuje nazwy państw, w których pojawiały się zakażenia (na przykład: Polska, Argentyna, Rosja, \ldots).
+			\item \textbf{Date}
+			(zmienna ciągła, określona w formacie dzień/miesiąc/rok) ---
+			daty od 01.01.2020 roku do 08.12.2022 roku, przedstawiające okres, z którego zostały zebrane dane (na przykład: 26.01.2020, 11.11.2021, \ldots). 
+			\item \textbf{Total\_cases}
+			(zmienna kategoryczna) ---
+			liczba wszystkich potwierdzonych przypadków zarażenia się wirusem COVID-19 (na przykład: 42, 1103, \ldots).
+			\item \textbf{New\_cases}
+			(zmienna kategoryczna ) --- nowe, potwierdzone przypadki zarażenia się wirusem COVID-19 (na przykład: 1, 17, \ldots).
+			\item \textbf{Total\_deaths}
+			(zmienna kategoryczna ) --- 
+			liczba wszystkich zgonów, które są wynikiem zarażenia się wirusem COVID-19 (na przykład: 2, 571, \ldots).
+			\item \textbf{New\_deaths}
+			(zmienna kategoryczna) --- nowe przypadki zgonów w wyniku zarażenia (na przykład: 5, 12, \ldots).
+			\item \textbf{Icu\_patients}
+			(zmienna kategoryczna) ---
+			Liczba pacjentów zarażonych COVID-19, którzy przebywają na oddziale intensywnej terapii w danym dniu (na przykład: 5, 10, \ldots). 
+			\item \textbf{Hosp\_patients}
+			(zmienna kategoryczna) ---
+			Liczba hospitalizowanych pacjentów w danym dniu (na przykład: 3, 7, \ldots).
+			\item \textbf{Total\_vaccinations}
+			(zmienna kategoryczna) ---
+			Liczba wszystkich zarejestrowanych i przyjętych szczepionek (na przykład: 2, 6500, \ldots).
+			\item \textbf{people\_vaccinated}
+			(zmienna kategoryczna) --- Liczba osób, które przyjęły przynajmniej jedną dawkę szczepionki (na przykład: 4, 2.5, \ldots).
+			\item \textbf{People\_fully\_vaccinated}
+			(zmienna kategoryczna) ---
+			liczba osób, które otrzymały wszystkie dawki określone w protokole szczepienia (na przykład: 75, 421, \ldots).
+			\item \textbf{Total\_boosters}
+			(zmienna kategoryczna) ---
+			Całkowita liczba podanych dawek przypominających szczepionki przeciwko COVID-19 (dawki podane poza liczbą określoną w protokole szczepienia) (na przykład: 1, 17, 55, \ldots).
+			
+		\end{enumerate}
+Dodatkowo w wybranej przez nas bazie danych znajduje się wiele kolumn, które odrzuciliśmy, ponieważ nie jesteśmy w stanie z ich pomocą odpowiedzieć na postawione przez nas pytanie badawcze. Do przykładowych kolumn odrzuconych należą:
+		\begin{enumerate}
+			\item \textbf{Iso\_code} (zmienna kategoryczna) --- kolumna ta przechowuje trzyliterowy kod państwa (na przykład: AFG - Afganistan).
+			\item \textbf{New\_cases} (zmienna kategoryczna) - nowe, potwierdzone przypadki zachorowań na COVID-19.
+			\item \textbf{New\_cases\_smoothed i New\_deaths\_smoothed} (zmienne kategoryczne) --- obie kolumny posiadają dane wygładzone co siódmy dzień dla danych adekwatnych do nazwy kolumny. 
+			\item \textbf{New\_deaths} (zmienna kategoryczna) --- 
+			przechowuje nowe, potwierdzone przypadki śmierci w wyniku zakażenia wirusem. 
+			\item \textbf{excess\_mortality\_cumulative\_absolute} (zmienna kategoryczna, określona w procentach) --- procentowa różnica pomiędzy odnotowaną tygodniową lub miesięczną liczbą zgonów w latach 2020–2021 a prognozowaną liczbą zgonów w tym samym okresie na podstawie poprzednich lat.
+			\item \textbf{Total\_cases\_per\_milion, New\_cases\_per\_milion,\\ New\_cases\_smoothed\_per \\ \_million, Total\_deaths\_per\_million, New\_deaths\_per\_million, New\_deaths\_ \\ smoothed\_per\_million, Icu\_patients\_per\_million,\\ Hosp\_patients\_per\_million} (zmienne kategoryczne) --- kolumny zawierające dane zawarte w nazwie kolumn (na przykład: per\_milion - dane podzielone przez milion ludzi). 
+			\item \textbf{Reproduction\_rate} (zmienna kategoryczna) ---
+			Oszacowanie w czasie rzeczywistym efektywnego współczynnika reprodukcji (R) COVID-19.
+		\end{enumerate}
+		
+		
+  \subsection{Dane wybrane do analizy}
+  Spośród wszystkich dostępnych danych, ze względu na duże braki danych w zależności od kraju w jakim były one zbierane postanowiliśmy wyłonić 5 krajów, na których przeprowadzimy analizę. Są to odpowiednio: Argentyna, Stany Zjednoczone, Niemcy, Australia i Korea Południowa. Wybierając te kraje mieliśmy także na uwadze na jakim kontynencie znajdują się te kraje, by analiza obejmowała jak najwięcej obszarów, a nie tylko na przykład Europę. Afryka nie znajduje się w tym zestawieniu, ponieważ żaden kraj afrykański nie dysponował danymi potrzebnymi do analizy.
+  \subsection{Obsługa braków wartości}
+   Braki wartości w wybranych przez nas danych wystepowały najczęściej w pierwszych 150 wierszach, czyli tych które dotyczyły początku pandemii ( okres od stycznia 2020 do lipca 2020). W przypadku kolumny total\_cases braki spowodowane są faktem iż do wystąpienia pierwszej wartości nie odnotowano żadnych przypadków zakażeń, dlatego też nie prowadzono wtedy ich spisu. Braki do pierwszej wartości wypełniamy zerami. Takim samym sposobem wypełniamy 'pierwsze' braki w innych kolumnach.  Natomiast pojedynczo występujące braki danych w dalszych wierszach wypełniamy wartościami poprzednimi. Na przykład: Dla kolumny icu\_patients w podzbiorze dotyczącym Argentyny dla dat (16.02.2021 - 20.02.2021) wartości wynoszą kolejno: 3581,3573, NA, 3608, 3605. Po obsłużeniu braku wartości wyglądają następująco: 3581, 3573, 3573, 3608, 3605. Dla reszty kolumn postępujemy w sposób identyczny. Przy wyborze sposobu obsługi błędów kierowaliśmy się tym, aby wypełnienia braków miały logiczne podstawy oraz nie zaburzały kształtu danych. Dlatego też nie wybraliśmy metody wypełniania średnią wartością. Dla wcześniej przytoczonego przykładu średnia kolumny icu\_patients wynosi po zaokrągleniu do całkowitej wartości 1891. Wypełnienie tą wartością i otrzymanie ciągu wartości: 3581, 3573, 1891, 3608, 3605 jedynie utrudniłoby analizę.
+  
+  
+<<echo = FALSE,warning=F, message=F>>=
+df <- read.csv("covid_data.csv")
+library(tidyr)
+library(knitr)
+library(ggplot2)
+library(tidyverse)
+library(qqplotr) 
+library(zoo)
+columns = c('continent','location','date','total_cases','new_cases','total_deaths','new_deaths',
+            'icu_patients','hosp_patients','total_vaccinations'
+            ,'people_vaccinated','people_fully_vaccinated','total_boosters','new_vaccinations',
+            'population','excess_mortality_cumulative','excess_mortality',
+            'excess_mortality_cumulative_absolute')
+
+columns_continents = c('location','date','total_cases','new_cases','total_deaths','new_deaths'
+            ,'total_vaccinations'
+            ,'people_vaccinated','people_fully_vaccinated','total_boosters','new_vaccinations',
+            'population', 'icu_patients')
+
+df <- df[ ,columns]
+df$date <- as.Date(df$date)
+
+
+df_europe <-df[df$location == 'Europe',columns_continents]
+df_europe[1,][is.na(df_europe[1,])] <- 0
+df_europe <- df_europe %>% fill()
+df_europe[is.na(df_europe)]=0
+
+df_africa <-df[(df$location == 'Africa'),columns_continents]
+df_africa[1,][is.na(df_africa[1,])] <- 0
+df_africa <- df_africa %>% fill()
+df_africa[is.na(df_africa)]=0
+
+df_asia <-df[(df$location == 'Asia'),columns_continents]
+df_asia[1,][is.na(df_asia[1,])] <- 0
+df_asia <- df_asia %>% fill()
+df_asia[is.na(df_asia)]=0
+
+df_usa <- df[(df$location == 'United States'),]
+df_usa[1,][is.na(df_usa[1,])] <- 0
+df_usa <- df_usa %>% fill()
+df_usa[is.na(df_usa)]=0
+
+
+df_argentina <- df[df$location == 'Argentina',]
+df_argentina[1,][is.na(df_argentina[1,])] <- 0
+df_argentina <- na.locf(df_argentina)
+df_argentina_weekly = df_argentina[seq(1, length(df_argentina$total_vaccinations), 7), ]
+df_argentina_monthly = df_argentina[seq(1, length(df_argentina$total_vaccinations), 30), ]
+
+
+df_usa <- df[(df$location == 'United States'),]
+df_usa[1,][is.na(df_usa[1,])] <- 0
+df_usa <- na.locf(df_usa)
+df_usa_weekly = df_usa[seq(1, length(df_usa$total_vaccinations), 7), ]
+df_usa_monthly = df_usa[seq(1, length(df_usa$total_vaccinations), 30), ]
+
+df_belgium <- df[(df$location == 'Belgium'),]
+df_belgium[1,][is.na(df_belgium[1,])] <- 0
+df_belgium <- na.locf(df_belgium)
+df_belgium_weekly = df_belgium[seq(1, length(df_belgium$total_vaccinations), 7), ]
+df_belgium_monthly = df_belgium[seq(1, length(df_belgium$total_vaccinations), 30), ]
+
+df_australia <- df[(df$location == 'Australia'),]
+df_australia[1,][is.na(df_australia[1,])] <- 0
+df_australia <- na.locf(df_australia)
+df_australia_weekly = df_australia[seq(1, length(df_australia$total_vaccinations), 7), ]
+df_australia_monthly = df_australia[seq(1, length(df_australia$total_vaccinations), 30), ]
+
+df_south_korea<- df[(df$location == 'South Korea'),]
+df_south_korea[1,][is.na(df_south_korea[1,])] <- 0
+df_south_korea <- na.locf(df_south_korea)
+df_south_korea_weekly = df_south_korea[seq(1, length(df_south_korea$total_vaccinations), 7), ]
+df_south_korea_monthly = df_south_korea[seq(1, length(df_south_korea$total_vaccinations), 30), ]
+@
+
+	\section{Analiza danych na wykresie}
+	Na początek przedstawiliśmy dane dotyczące wszystkich zakażeń wirusem COVID-19 oraz liczbę szczepionek przyjętych przez ludzi w  czasie pandemii w Argentynie. 
+	
+	
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig = TRUE,fig.width = 6, fig.height = 4>>=
+ggplot(df_argentina, aes(x=df_argentina$date ,y=df_argentina$total_cases)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich zakażeń od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Argentyny",
+       x = "Czas",
+       y = "Liczba wszystkich zakażeń„")  
+@
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig = TRUE,fig.pos='h',fig.width = 6, fig.height = 4>>=
+ggplot(df_argentina, aes(x=df_argentina$date ,y=df_argentina$total_vaccinations)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich podanych 
+                    szczepionek od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Argentyny",
+       x = "Czas",
+       y = "Liczba wszystkich podanych szczepionek")  
+@
+\end{figure}
+
+	Widzimy, że liczba szczepionek rośnie niemal wykładniczo w okresie pomiędzy 2020 a 2022 rokiem, co powoduje mniej gwałtowny wzrost liczby wszystkich zakażeń w kraju. Tak przedstawione dane przeważają na korzyść postawionej przez nas tezy. Za nim jednak przyjmiemy lub odrzucimy tezę, weźmy pod uwagę, wartości w innych kolumnach.
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_argentina, aes(x=df_argentina$total_vaccinations ,y=df_argentina$total_deaths)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych 
+                                    szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Argentyny",
+       x = "Liczba wszystkich wykonanych szczepień",
+       y = "Liczba wszystkich zgonów")  
+@
+\end{figure}
+
+	Jesteśmy w stanie zauważyć wyhamowanie wzrostu liczby zgonów w zależności od zwiększającej się ilości wykonywanych szczepień. Informacje te są potwierdzeniem danych z poprzednich wykresów, które przedstawiają nam realny wpływ szczepień na ilość nowych zakażeń, które mogą końcowo prowadzić do śmierci. 
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+
+ggplot(df_argentina, aes(x=df_argentina$people_fully_vaccinated, y=df_argentina$icu_patients)) + 
+  geom_area(fill = 4,
+            alpha = 0.5, 
+            color = 1,
+            lwd = 0.5, 
+            linetype = 1,
+            ) +
+  labs(title = "Wykres zależności osób leczonych na oddziale intensywnej terapii od 
+                  ilości osób w pełni zaszczepionych",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Argentyny",
+       x = "Liczba osób w pełni zaszczepionych",
+       y = "Liczba pacjentów leczonych na oddziale intensywnej terapii")
+@
+\end{figure}
+
+Do pewnego momentu,obserwujemy spadek osób hospitalizowanych wraz ze zwiększającą się ilością osób w pełni zaszczepionych. Na końcowym odcinku danych sytuacja ulega zmianie i liczba osób przybywających w szpitalach ponownie wzrasta. Zakładamy, że sytuacja ta ma związek ze znacznym, a nawet całkowitym zniesieniem restrykcji w większości krajów na świecie, co dotyczyło również  Argentyny. 
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_argentina_monthly, aes(x=df_argentina_monthly$total_vaccinations, y=df_argentina_monthly$total_deaths)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Argentyny",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów")  
+@
+\end{figure}
+
+
+	Dodatkowo, przedstawiamy prostą najlepszego dopasowania do danych wyżej opisanych, w celu jeszcze lepszego zobrazowania wypłaszczenia przyrostu zgonów w stosunku do ilości wykonanych szczepień. \\
+	\newpage
+	Teraz przedstawimy dane zebrane w Belgii:
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_belgium, aes(x=df_belgium$date ,y=df_belgium$total_cases)) + 
+  geom_line() + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich zakażeń od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Belgii",
+       x = "Czas",
+       y = "Liczba wszystkich zakażeń")  
+@
+\end{figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_belgium, aes(x=df_belgium$date ,y=df_belgium$total_vaccinations)) + 
+  geom_line() + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych 
+                                    szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Belgii",
+       x = "Czas",
+       y = "Liczba wszystkich podanych szczepionek")  
+@
+\end{figure}
+
+	Dla pierwszych dwóch wykresów zauważamy sytuację bardzo podobna do tej zachodzącej w Argentynie. Liczba wszystkich podanych szczepionek w roku 2021 zwiększała się niemal eksponencjalnie ,na przykładzie Belgii. Pomimo dużej ilości szczepień szczyt okres największej ilości nowych zachorowań przypada na przełom roku 2021 i 2022, podobnie jak w Argentynie. Wyciągnięte stąd wnioski działają na niekorzyść naszej tezy, gdyż nie widać zmniejszonej zachorowalności przy dużej ilości szczepień.
+
+\begin{figure}[H]
+\centering	
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_belgium, aes(x=df_belgium$total_vaccinations ,y=df_belgium$total_deaths)) + 
+  geom_line() + 
+   labs(title = "Wykres zależności wszystkich zgonów od wszystkich wykonanych szczepień",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Belgii",
+       x = "Liczba wszystkich wykonanych szczepień",
+       y = "Liczba wszystkich zgonów")  
+@
+\end{figure}
+
+
+	Na potwierdzenie tezy działają jednak dane dotyczące zgonów. Po rozpoczęciu szczepień ilość zgonów drastycznie wyhamowała, nabierając rozpędu jedynie pod koniec pandemii, przy ostatniej fali zakażeń. 
+
+
+\begin{figure}[H]
+\centering	
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_belgium, aes(x=df_belgium$people_fully_vaccinated, y=df_belgium$icu_patients)) + 
+  geom_area(fill = 4,
+            alpha = 0.5, 
+            color = 1,
+            lwd = 0.5, 
+            linetype = 1) + 
+  labs(title = "Wykres zależności osób leczonych na oddziale intensywnej terapii
+                    od ilości osób w pełni zaszczepionych",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Belgii",
+       x = "Liczba osób w pełni zaszczepionych",
+       y = "Liczba pacjentów leczonych na oddziale intensywnej terapii")
+@
+\end{figure}
+
+
+	Przy kolejnym wykresie warto zwrócić uwagę na wartości osi y, czyli na ilość osób hospitalizowanych. 
+	W porównaniu do Argentyny około 10 razy mniej osób leczyło się w szpitalu, ale również około 4 razy mniej osób zostało w pełni zaszczepionych. Jest to oczywiście normalna różnica ze względów terytorialnych --- Belgia jest dużo mniejszym państwem, o dużo mniejszej powierzchni. Nie mniej jednak możemy zauważyć, że Belgowie gorzej poradzili sobie z powrotem do "normalnego" życia, bez restrykcji, niż Argentyńczycy. Może to być spowodowane surowszymi ograniczeniami w danym państwie w czasie pandemii, ale są to tylko nasze przypuszczenia. 
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_belgium_monthly, aes(x=df_belgium_monthly$total_vaccinations, y=df_belgium_monthly$total_deaths)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych 
+                                    szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Belgii",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów") 
+@
+\end{figure}
+
+	Potwierdziliśmy wnioski wyciągnięte z dwóch pierwszych wykresów, mianowicie im więcej szczepionek, tym mniej zgonów,czyli krzywa ilości zgonów jest bardziej wygładzona. \\
+	\newpage
+	Dane dotyczące Stanów Zjednoczonych. 
+	
+	
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_usa, aes(x=df_usa$date ,y=df_usa$total_cases)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich zakażeń  od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Stanów Zjednoczonych",
+       x = "Czas",
+       y = "Liczba wszystkich zakaż eń")  
+@
+\end{figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_usa, aes(x=df_usa$date ,y=df_usa$total_vaccinations)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich podanych
+                  szczepionek od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Stanów Zjednoczonych",
+       x = "Czas",
+       y = "Liczba wszystkich podanych szczepionek")  
+@
+\end{figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_usa, aes(x=df_usa$total_vaccinations ,y=df_usa$total_deaths)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych 
+                                    szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Stanów Zjednoczonych",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów") 
+@
+\end{figure}
+
+	Sytuacja prezentuje się podobnie jak w poprzednich dwóch krajach, mianowicie — wraz ze wzrostem wykonanych szczepień wzrost liczby zgonów jest coraz mniejszy, lecz w tym przypadku tylko do trzeciego kwartału 2021 roku, potem ponownie zwiększa się, choć nie tak gwałtownie jak na początku pandemii. Rozbieżność pojawia się w wykresie zależności wszystkich zakażeń od czasu. Nie mamy już postaci nawet zbliżonej do eksponencjalnej, natomiast krzywa zaczyna przypominać funkcję liniową. Możemy na tej podstawie wnioskować, że Amerykanie nie odczuli za bardzo spadku liczby zakażeń po pojawieniu się szczepionek na COVID-19. Przypuszczamy, że sytuacja ta spowodowana była lekceważącym podejściem Amerykanów do restrykcji podczas pandemii oraz gęstego zaludnienia tego kraju, co ułatwiało roznoszenie wirusa.
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_usa, aes(x=df_usa$people_fully_vaccinated, y=df_usa$icu_patients)) + 
+  geom_area(fill = 4,
+            alpha = 0.5, 
+            color = 1,
+            lwd = 0.5, 
+            linetype = 1) + 
+  labs(title = "Wykres zależności osób leczonych na oddziale intensywnej terapii
+                  od ilości osób w pełni zaszczepionych",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Stanów Zjednoczonych",
+       x = "Liczba osób w pełni zaszczepionych",
+       y = "Liczba pacjentów leczonych na oddziale intensywnej terapii")
+@
+\end{figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_usa_monthly, aes(x=df_usa_monthly$total_vaccinations, y=df_usa_monthly$total_deaths)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Stanów Zjednoczonych",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów") 
+
+@
+\end{figure}
+
+	Powyższe wykresy potwierdzają nasze przypuszczenia odnośnie do lekceważącego podejścia Amerykanów, ale prawdopodobnie po zniesieniu obowiązujących ograniczeń, ponieważ na nowo wzrosła liczba hospitalizowanych pacjentów. 
+	\newpage
+	Dane dotyczące Australii:
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_australia, aes(x=df_australia$date ,y=df_australia$total_cases)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich zakażeń od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Australii",
+       x = "Czas",
+       y = "Liczba wszystkich zakaż eń")  
+@
+\end{figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_australia, aes(x=df_australia$date ,y=df_australia$total_vaccinations)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich podanych 
+                  szczepionek od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Australii",
+       x = "Czas",
+       y = "Liczba wszystkich podanych szczepionek")  
+@
+\end{figure}
+
+	W przypadku tego kraju mamy dość nietypową sytuację, ponieważ mimo wprowadzenia  szczepionek, a nawet w okresie przed możemy zauważyć bardzo spokojne wzrosty liczby zakażeń. Przypuszczamy, że było to spowodowane surowymi restrykcjami, po których zniesieniu, od 2022 roku możemy zauważyć gwałtowny wzrost zarażeń. 
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_australia, aes(x=df_australia$total_vaccinations ,y=df_australia$total_deaths)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych 
+                                    szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Australii",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów") 
+@
+\end{figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_australia_monthly, aes(x=df_australia_monthly$total_vaccinations, y=df_australia_monthly$total_deaths)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych 
+                                    szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Australii",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów") 
+@
+\end{figure}
+
+Widzimy, że razem ze wzrostem liczby szczepionek rośnie wykładniczo liczba wszystkich zgonów, co może być prawdą, w kontekście naszych wcześniejszych założeń o surowych obostrzeniach, które zapobiegały zarówno zakażeniom jak i zgonom. Przypadek Australii ciężko jest ustosunkować do naszej tezy, ponieważ nawet wysoki poziom szczepień nie zmniejszył ilości nowych zgonów ani zachorowań, lecz w przypadku braku porównania z okresem bez szczepionek oraz restrykcji, nie jesteśmy w stanie stwierdzić czy szczepienia obniżyły potencjalną ilość zgonów i hospitalizacji czy też nie.
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_australia, aes(x=df_australia$people_fully_vaccinated, y=df_australia$icu_patients)) + 
+  geom_area(fill = 4,
+            alpha = 0.5, 
+            color = 1,
+            lwd = 0.5, 
+            linetype = 1) + 
+  labs(title = "Wykres zależności osób leczonych na oddziale intensywnej terapii
+                  od ilości osób w pełni zaszczepionych",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Australii",
+       x = "Liczba osób w pełni zaszczepionych",
+       y = "Liczba pacjentów leczonych na oddziale intensywnej terapii")
+@	
+\end{figure}
+
+Widzimy, że szczyt ilości osób hospitalizowanych w związku z pandemią jest największy prawdopodobnie już po zniesieniu restrykcji. Maksymalna ilość wynosi 424, co w porównaniu do ponad 26 milionów mieszkańców jest to bardzo małą ilością. Mogłoby to świadczyć o skuteczności szczepionek w walce z wirusem, z drugiem jednak strony szczyt hospitalizacji przypada na okres, gdy większość populacjii jest już wyszczepiona. Są to sprzeczne wnioski i biorąc pod uwagę politykę walki z pandemią podjętą przez rząd Australii, polegającą na rygorystycznych restrykcjach, nie można więc jednoznacznie stwierdzić jaki wpływ mają szczepienia na ilość hospitalizacji oraz zgonów spowodowanych przez COVID-19. Trzeba mieć jednak na uwadze to, że liczby zgonów oraz osób leczonych na oddziałach intensywnej terapii są małe w porównaniu do ogółu populacji, co można interpretować jako argument na popracie tezy.
+
+\newpage
+	Ostatni omówiony przez nas zestaw danych dotyczy Korei Południowej: 
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+
+ggplot(df_south_korea, aes(x=df_south_korea$date ,y=df_south_korea$total_cases)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich zakażeń od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Korei Południowej",
+       x = "Czas",
+       y = "Liczba wszystkich zakażeń")  
+@
+\end{figure}
+
+W Korei pierwsze większe ilości zakażeń  są mocno odsunięte w czasie przez działania rządu, co odczytujemy z powyższego wykresu.
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_south_korea, aes(x=df_south_korea$date ,y=df_south_korea$total_vaccinations)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości wszystkich podanych 
+                  szczepionek od czasu",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Korei Południowej",
+       x = "Czas",
+       y = "Liczba wszystkich podanych szczepionek")  
+@
+\end{figure}
+
+Szczepienia zaczęły się w czasie bardzo zbliżonym do reszty krajów, tj. I kwartał 2021 roku. Do połowy 2022 w pełni wyszczepiono ponad 45 milionów ludzi, co stanowi około 81 procent 55-milionowej populacji.
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_south_korea, aes(x=df_south_korea$total_vaccinations ,y=df_south_korea$total_deaths)) + 
+  geom_line() + 
+  labs(title = "Wykres zależności ilości zgonów od 
+                  ilości podanych szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Korei Południowej",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów") 
+@
+\end{figure}
+
+    Pomimo tak dużej liczby szczepień po zniesieniu restrykcji liczba zgonów wzrosła wykładniczo, co świetnie widać na powyższym wykresie.
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_south_korea_monthly, aes(x=df_south_korea_monthly$total_vaccinations, y=df_south_korea_monthly$total_deaths)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(title = "Wykres zależności ilości zgonów od ilości podanych 
+                                    szczepionek",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Korei Południowej",
+       x = "Liczba wszystkich podanych szczepionek",
+       y = "Liczba wszystkich zgonów") 
+@
+\end{figure}
+
+Z samego nachylenia linii trendu moglibyśmy wywnioskować, że im większa ilość szczepień, tym większa ilość zgonów, co jest tezą odwrotną do pierwotnie przyjętej.
+\begin{figure}[H]
+\centering
+<<echo=FALSE,warning=F, message=F,fig.width = 6.2, fig.height = 4>>=
+ggplot(df_south_korea, aes(x=df_south_korea$people_fully_vaccinated, y=df_south_korea$icu_patients)) + 
+  geom_area(fill = 4,
+            alpha = 0.5, 
+            color = 1,
+            lwd = 0.5, 
+            linetype = 1) + 
+  labs(title = "Wykres zależności osób leczonych na oddziale intensywnej terapii
+                    od ilości osób w pełni zaszczepionych",
+       subtitle = "Dla danych z okresu 01.01.2020 do 08.12.2022 roku",
+       caption = "Dane dotyczące Korei Południowej",
+       x = "Liczba osób w pełni zaszczepionych",
+       y = "Liczba pacjentów leczonych na oddziale intensywnej terapii")
+@
+\end{figure}
+  Podobnie zachowała się ilość pacjentów przyjmowanych na oddziały intensywnej terapii, która w ostatnim czasie bije historyczne rekordy. Trzeba jednak brać pod uwagę strategię walki z pandemią jaką przyjął rząd Korei. Bardzo surowe restrykcje, podobnie jak w Australii, przełożyły się na bardzo niską ilość zgonów oraz hospitalizacji. Po ich poluźnieniu, drastycznie wzrosła, co można argumentować bagatelizacją wirusa. Pomimo dużych wzrostów, zarówno ilość pacjentów oddziałów intensywnej terapii jak i łączna ilość zgonów jest wyraźnie mniejsza w porównaniu do Argentyny, gdzie ilość zgonów była 4 razy większa. Z tego możemy wnioskować o skuteczności restrykcji, ale co ważniejsze, skuteczności szczepionek przy zmniejszaniu ilości zgonów i hospitalizacji. 
+
+	
+
+	\section{Wnioski i podsumowanie}
+	Po dogłębnej analizie danych dla poszczególnych krajów na świecie jesteśmy w stanie zweryfikować postawioną przez nas tezę. Nie została ona w pełni potwierdzona, bliższe prawdy będzie stwierdzenie, że  \textbf{Im więcej szczepień tym mniej zgonów, ale nie hospitalizacji}. Na każdym podzbiorze danych dotyczącym danego kraju wykazaliśmy, że ilość szczepionek owszem, na początku pandemii ma wpływ na pomniejszenie się ilości chorych w szpitalach, natomiast w całym rozpatrywanym okresie danych widzieliśmy pod koniec wzrosty, które w niektórych krajach osiągały bardzo wysokie wartości Nie możemy przez to powiedzieć, że ilość szczepień chroni ludzi przed leczeniem się w szpitalu po zakażeniu wirusem, a więc nie zmniejsza ilości hospitalizacji. Ważnym czynnikiem mającym wpływ na liczbę hospitalizacji była taktyka walki z pandemią wybrana przez rząd danego kraju. Niezależnie jednak od wprowadzonych restrykcji, przy wysokim poziomi wyszczepienia społeczeństwa zmiejszała się śmiertelność wirusa, co potwierdzałoby drugą część postawionej przez nas tezy. 
+
+
+
+
+
+
+\end{document}
